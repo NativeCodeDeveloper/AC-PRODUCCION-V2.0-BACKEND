@@ -636,4 +636,109 @@ export default class ReservaPacienteController {
             return res.status(400).send({message: error.message});
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+    static async insertarReservasMultiples(req, res) {
+        try {
+            const{
+                nombrePaciente,
+                apellidoPaciente,
+                nombreProfesional,
+                rut,
+                telefono,
+                email,
+                fechaInicio,
+                horaInicio,
+                fechaFinalizacion,
+                horaFinalizacion,
+                monto_reserva,
+                motivo_reserva,
+                estadoReserva,
+                id_profesional,
+                origen
+            } = req.body;
+
+            console.log("-------------------------------------------------------------------")
+            console.log(" FUNCIONALIDAD INSERTAR-RESERVA-MULTIPLE")
+            console.log("-------------------------------------------------------------------")
+            console.log("SE PROCEDE CON EL CONTROLLADOR DE UNA RESERVA INDIVIDUAL ===> FUNCIONALIDAD INSERTAR-RESERVA-MULTIPLE")
+            console.log("-------------------------------------------------------------------")
+            console.log(req.body);
+            console.log("-------------------------------------------------------------------")
+            console.log(" ")
+
+            const correoNormalizado = email && String(email).trim() ? String(email).trim() : null;
+
+            if (!nombrePaciente || !apellidoPaciente || !rut || !telefono || !fechaInicio || !horaInicio || !fechaFinalizacion || !horaFinalizacion || !monto_reserva || !motivo_reserva || !estadoReserva || !id_profesional) {
+                return res.status(400).send({message: "sindata"})
+            }
+
+            const claseReservaPaciente = new ReservaPacientes();
+            const resultadoQuery = await claseReservaPaciente.insertarReservaPaciente(
+                nombrePaciente,
+                apellidoPaciente,
+                rut,
+                telefono,
+                correoNormalizado,
+                fechaInicio,
+                horaInicio,
+                fechaFinalizacion,
+                horaFinalizacion,
+                monto_reserva,
+                motivo_reserva,
+                estadoReserva,
+                id_profesional)
+
+            if (resultadoQuery.affectedRows > 0) {
+                NotificacionAgendamiento.enviarCorreoConfirmacionEquipo({
+                    nombreProfesional,
+                    nombrePaciente,
+                    apellidoPaciente,
+                    fechaInicio,
+                    horaInicio,
+                    monto_reserva,
+                    motivo_reserva,
+                    accion: "AGENDADA",
+                    origen: origen === "web" || origen === "mercadopago" ? origen : "dashboard",
+                    id_reserva: resultadoQuery.insertId
+                }).catch(err => {
+                    console.error("[MAIL EQUIPO] Error:", err.message);
+                });
+
+                const claseProfesionales = new Profesionales();
+                const correoEnArray = await claseProfesionales.seleccionarCorreoEspecificoPorProfesional(id_profesional);
+                const correoDelProfesional = correoEnArray[0].correoContacto;
+                // El nombre del profesional se toma de la base y solo se usa el del body
+                // como respaldo: el front no siempre lo envia y el correo llegaba sin el.
+                const nombreProfesionalCorreo = correoEnArray[0].nombreProfesional || nombreProfesional;
+                let nombreDelPaciente = nombrePaciente + " " + apellidoPaciente;
+
+                enviarCorreoProfesionales(
+                    correoDelProfesional,
+                    nombreProfesionalCorreo,
+                    nombreDelPaciente,
+                    fechaInicio,
+                    horaInicio
+                ).catch(err => {
+                    console.error("[MAIL] Error:", err.message);
+                });
+                return res.status(200).send({message: true})
+            } else {
+                return res.status(200).send({message: false})
+            }
+
+        } catch (error) {
+            return responderErrorReserva(res, error);
+        }
+    }
+
 }
