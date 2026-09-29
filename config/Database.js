@@ -12,7 +12,7 @@ class DataBase {
             database: process.env.DB_DATABASE,
             port: Number(process.env.DB_PORT || 3306), // ahora se incluye el puerto
             waitForConnections: true,
-            connectionLimit: Number(process.env.DB_POOL_LIMIT || 10),
+            connectionLimit: Number(process.env.DB_POOL_LIMIT || 5),
             queueLimit: 0
         });
     }
