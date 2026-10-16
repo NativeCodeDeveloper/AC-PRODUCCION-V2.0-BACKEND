@@ -268,7 +268,7 @@ export default class ReservaPacienteController {
                 const claseProfesionales = new Profesionales();
                 const correoEnArray = await claseProfesionales.seleccionarCorreoEspecificoPorProfesional(id_profesional);
                 const correoDelProfesional = correoEnArray[0].correoContacto;
-                // El nombre del profesional se toma de la base y solo se usa el del body
+                // El NOMBRE nombre del profesional se toma de la base y solo se usa el del body
                 // como respaldo: el front no siempre lo envia y el correo llegaba sin el.
                 const nombreProfesionalCorreo = correoEnArray[0].nombreProfesional || nombreProfesional;
                 let nombreDelPaciente = nombrePaciente + " " + apellidoPaciente;
